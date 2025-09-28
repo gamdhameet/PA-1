@@ -1,0 +1,9 @@
+Performance Analysis for File Transfer (100MB file)
+The system took 17.4 seconds to transfer a 100MB file. This gives a transfer rate of 5.75 MB per second.
+Four main problems slow down the file transfer:
+The buffer size creates the biggest problem. The system uses a 256-byte buffer by default. This small size forces the system to make 390,625 separate read and write operations for a 100MB file. Each operation creates overhead and causes the system to switch between client and server processes.
+Process communication adds more delays. Named pipes create overhead for each read and write operation. Each chunk transfer needs multiple system calls. Communication between processes runs slower than operations within a single program.
+The system processes files in order, one chunk at a time. The client waits for each chunk before asking for the next one. This prevents the system from handling multiple requests at once.
+Memory allocation slows things down too. The system creates and destroys buffers for each chunk. This constant allocation and cleanup adds overhead.
+Several changes could improve performance. Users can increase the buffer size with the -m flag to reduce the number of operations. The system could handle multiple requests at once instead of waiting for each one. Memory mapping could help with large files. Shared memory might work better than named pipes for large transfers.
+The small buffer size combined with named pipe overhead causes the main slowdown.
