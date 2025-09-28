@@ -43,9 +43,3 @@ The slightly quadratic growth (rather than linear) occurs because:
 - System resource contention increases with longer transfer times
 - Memory fragmentation may worsen during long transfers
 - Named pipe buffer management becomes less efficient with sustained high throughput
-
-
-Final Thoughts: 
-The performance analysis confirms the expected trend where execution time grows quadratically with file size due to the combination of small buffer size and named pipe communication overhead. The system achieves reasonable throughput (4-6 MB/s average) but could be significantly improved with larger buffer sizes and optimized communication mechanisms.
-
-The graph clearly demonstrates that the current implementation's performance is dominated by the number of operations required rather than the actual data transfer capacity, making buffer size the critical performance parameter.
