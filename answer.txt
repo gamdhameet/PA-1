@@ -21,6 +21,13 @@ The graph(check pdf or image) shows a clear quadratic relationship between file 
 
 The throughput improves slightly with larger files (from 1.51 MB/s to 5.99 MB/s) because the fixed overhead per operation becomes proportionally smaller for larger files.
 
+
+bottlenecks for diff types of file sizes :
+
+Small Files - Fixed communication Overhead
+Medium Files - Mix of overhead and transfer time
+Large Files - Primarily data transfer time
+
 Reason for that performance trend:
 
 1. Buffer Size (Primary Factor):
@@ -43,3 +50,4 @@ The slightly quadratic growth (rather than linear) occurs because:
 - System resource contention increases with longer transfer times
 - Memory fragmentation may worsen during long transfers
 - Named pipe buffer management becomes less efficient with sustained high throughput
+
