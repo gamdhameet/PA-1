@@ -1,9 +1,51 @@
-Performance Analysis for File Transfer (100MB file)
-The system took 17.4 seconds to transfer a 100MB file. This gives a transfer rate of 5.75 MB per second.
-Four main problems slow down the file transfer:
-The buffer size creates the biggest problem. The system uses a 256-byte buffer by default. This small size forces the system to make 390,625 separate read and write operations for a 100MB file. Each operation creates overhead and causes the system to switch between client and server processes.
-Process communication adds more delays. Named pipes create overhead for each read and write operation. Each chunk transfer needs multiple system calls. Communication between processes runs slower than operations within a single program.
-The system processes files in order, one chunk at a time. The client waits for each chunk before asking for the next one. This prevents the system from handling multiple requests at once.
-Memory allocation slows things down too. The system creates and destroys buffers for each chunk. This constant allocation and cleanup adds overhead.
-Several changes could improve performance. Users can increase the buffer size with the -m flag to reduce the number of operations. The system could handle multiple requests at once instead of waiting for each one. Memory mapping could help with large files. Shared memory might work better than named pipes for large transfers.
-The small buffer size combined with named pipe overhead causes the main slowdown.
+Performance Analysis: File Transfer Execution Times vs File Size
+
+Table(Check graph in the image):
+File Size (MB) | Execution Time (s) | Throughput (MB/s)
+--------------------------------------------------
+         1     |       0.663        |      1.51
+         5     |       1.453        |      3.44
+        10     |       2.572        |      3.89
+        25     |       5.076        |      4.93
+        50     |       9.058        |      5.52
+       100     |      16.696        |      5.99
+
+Average Throughput: 4.21 MB/s
+
+Analisis:
+The graph(check pdf or image) shows a clear quadratic relationship between file size and execution time. As file size increases, execution time grows at an accelerating rate rather than linearly. This is evident from the data:
+
+- 1MB → 5MB (5x size increase): 2.2x time increase
+- 5MB → 25MB (5x size increase): 3.5x time increase  
+- 25MB → 100MB (4x size increase): 3.3x time increase
+
+The throughput improves slightly with larger files (from 1.51 MB/s to 5.99 MB/s) because the fixed overhead per operation becomes proportionally smaller for larger files.
+
+Reason for that performance trend:
+
+1. Buffer Size (Primary Factor):
+The system uses a default 256-byte buffer size, which creates the main performance bottleneck. For a 100MB file, this requires approximately 390,625 separate read/write operations. Each operation involves:
+- System call overhead for named pipe communication
+- Process context switching between client and server
+- Buffer allocation and deallocation
+
+2. Name pipe communication overhead:
+Each chunk transfer requires multiple system calls through named pipes (FIFOs). The inter-process communication adds significant latency compared to in-memory operations. The overhead is constant per operation but becomes more significant with smaller chunk sizes.
+
+3. sequential proccessing :
+The client processes file chunks sequentially, waiting for each response before requesting the next chunk. This prevents any parallel processing and adds cumulative latency.
+
+4. Memory management overhead:
+Each chunk transfer involves dynamic memory allocation and deallocation, which adds computational overhead that scales with the number of operations.
+
+5. quadratic growth pattern:
+The slightly quadratic growth (rather than linear) occurs because:
+- System resource contention increases with longer transfer times
+- Memory fragmentation may worsen during long transfers
+- Named pipe buffer management becomes less efficient with sustained high throughput
+
+
+Final Thoughts: 
+The performance analysis confirms the expected trend where execution time grows quadratically with file size due to the combination of small buffer size and named pipe communication overhead. The system achieves reasonable throughput (4-6 MB/s average) but could be significantly improved with larger buffer sizes and optimized communication mechanisms.
+
+The graph clearly demonstrates that the current implementation's performance is dominated by the number of operations required rather than the actual data transfer capacity, making buffer size the critical performance parameter.
